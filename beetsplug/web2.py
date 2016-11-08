@@ -204,13 +204,15 @@ def make_app(lib, username=None, password=None):
     route('/item/<ids:list>', 'GET', web2.get_items)
     route('/item/values/<key:path>', 'GET', web2.get_item_unique_field_values)
     route('/item/query/<query:path>', 'GET', web2.get_item_query)
-    route('/item/<id:int>/file', 'GET', web2.get_item_file)
 
     route('/album/', 'GET', web2.get_albums)
     route('/album/query/', 'GET', web2.get_albums)
     route('/album/<ids:list>', 'GET', web2.get_albums)
     route('/album/values/<key:path>', 'GET', web2.get_album_unique_field_values)
     route('/album/query/<query:path>', 'GET', web2.get_album_query)
+
+    # no authentication for playback
+    app.route('/item/<id:int>/file', 'GET', web2.get_item_file)
 
     return SubURI(app)
 
