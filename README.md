@@ -10,4 +10,12 @@ metadata has been removed to reduce payload size.
 
 ## Configuration
 
-    The plugin accepts the same options as web.
+* hostname: web's hostname
+* port: web's port
+* server: override WSGI server (default: auto)
+* username: username (enable auth)
+* password: password (enable auth)
+
+## Deployment
+
+X-Script-Name is supported.
