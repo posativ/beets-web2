@@ -14,6 +14,8 @@
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
 
+from __future__ import division, absolute_import, print_function
+
 import os
 import re
 import time
@@ -187,13 +189,13 @@ def make_app(lib):
     return app
 
 
-class WebPlugin(BeetsPlugin):
+class Web2Plugin(BeetsPlugin):
     def __init__(self):
-        super(WebPlugin, self).__init__()
+        super(Web2Plugin, self).__init__()
         self.config.add({
-            'host': '127.0.0.1',
+            'host': u'127.0.0.1',
             'port': 8337,
-            'server': 'wsgiref'
+            'server': u'auto'
         })
 
     def commands(self):
@@ -210,9 +212,9 @@ class WebPlugin(BeetsPlugin):
             if args:
                 self.config['server'] = args.pop(0)
 
-            host = self.config['host'].as_str()
+            host = self.config['host'].get(str)
             port = self.config['port'].get(int)
-            server = self.config['server'].as_str()
+            server = self.config['server'].get(str)
 
             app = make_app(lib)
             app.run(host=host, port=port, server=server, debug=opts.debug)
