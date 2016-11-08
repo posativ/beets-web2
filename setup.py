@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='beets-web2',
-    version='0.1',
+    version='0.2',
     description='alternate web API using Bottle.py',
     author='Martin Zimmermann',
     author_email='info@posativ.org',
