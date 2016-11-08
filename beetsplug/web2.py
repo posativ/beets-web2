@@ -24,7 +24,8 @@ from beets import library, ui
 from beets.plugins import BeetsPlugin
 
 from bottle import Bottle, HTTPResponse, HTTPError
-from bottle import request, parse_date, parse_range_header, _file_iter_range
+from bottle import run, request, auth_basic
+from bottle import parse_date, parse_range_header, _file_iter_range
 
 
 def _get_unique_table_field_values(lib, model, field, sort_field):
@@ -183,24 +184,33 @@ class SubURI(object):
         return self.app(environ, start_response)
 
 
-def make_app(lib):
+def make_app(lib, username=None, password=None):
     web2 = Web2(lib)
 
     app = Bottle()
     app.router.add_filter('list', ids_list_filter)
 
-    app.route('/item/', 'GET', web2.get_items)
-    app.route('/item/query/', 'GET', web2.get_items)
-    app.route('/item/<ids:list>', 'GET', web2.get_items)
-    app.route('/item/values/<key:path>', 'GET', web2.get_item_unique_field_values)
-    app.route('/item/query/<query:path>', 'GET', web2.get_item_query)
-    app.route('/item/<id:int>/file', 'GET', web2.get_item_file)
+    def check(u, p):
+        return u == username and p == password
 
-    app.route('/album/', 'GET', web2.get_albums)
-    app.route('/album/query/', 'GET', web2.get_albums)
-    app.route('/album/<ids:list>', 'GET', web2.get_albums)
-    app.route('/album/values/<key:path>', 'GET', web2.get_album_unique_field_values)
-    app.route('/album/query/<query:path>', 'GET', web2.get_album_query)
+    def route(path, method, func):
+        if username and password:
+            app.route(path, method, auth_basic(check)(func))
+        else:
+            app.route(path, method, func)
+
+    route('/item/', 'GET', web2.get_items)
+    route('/item/query/', 'GET', web2.get_items)
+    route('/item/<ids:list>', 'GET', web2.get_items)
+    route('/item/values/<key:path>', 'GET', web2.get_item_unique_field_values)
+    route('/item/query/<query:path>', 'GET', web2.get_item_query)
+    route('/item/<id:int>/file', 'GET', web2.get_item_file)
+
+    route('/album/', 'GET', web2.get_albums)
+    route('/album/query/', 'GET', web2.get_albums)
+    route('/album/<ids:list>', 'GET', web2.get_albums)
+    route('/album/values/<key:path>', 'GET', web2.get_album_unique_field_values)
+    route('/album/query/<query:path>', 'GET', web2.get_album_query)
 
     return SubURI(app)
 
@@ -211,7 +221,9 @@ class Web2Plugin(BeetsPlugin):
         self.config.add({
             'host': u'127.0.0.1',
             'port': 8337,
-            'server': u'auto'
+            'server': u'auto',
+            'username': '',
+            'password': ''
         })
 
     def commands(self):
@@ -232,8 +244,11 @@ class Web2Plugin(BeetsPlugin):
             port = self.config['port'].get(int)
             server = self.config['server'].get(str)
 
-            app = make_app(lib)
-            app.run(host=host, port=port, server=server, debug=opts.debug)
+            username = self.config['username'].get(str)
+            password = self.config['password'].get(str)
+
+            app = make_app(lib, username, password)
+            run(app, host=host, port=port, server=server, debug=opts.debug)
 
         cmd.func = func
         return [cmd]
